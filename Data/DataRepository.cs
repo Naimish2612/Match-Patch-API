@@ -40,7 +40,7 @@ namespace DatingApp.API.Data
 
         public async Task<User> GetUser(int user_id)
         {
-            var user =await _dataContext.Users.Include(p => p.Photos).FirstOrDefaultAsync(x => x.Id == user_id);
+            var user = await _dataContext.Users.Include(p => p.Photos).FirstOrDefaultAsync(x => x.Id == user_id);
 
             return user;
         }
@@ -50,8 +50,19 @@ namespace DatingApp.API.Data
             //var users =await _dataContext.Users.Include(p => p.Photos).ToListAsync();
             //return users;
 
-            var users =_dataContext.Users.Include(p => p.Photos);
-            return await PagedList<User>.PagedListAsync(users,pageBaseModel.PageIndex,pageBaseModel.PageSize);
+            var users = _dataContext.Users.Include(p => p.Photos).AsQueryable();
+            users = users.Where(u => u.Id != pageBaseModel.user_id && u.gender == pageBaseModel.gender);
+
+            if(pageBaseModel.min_age!=18 || pageBaseModel.max_age != 99)
+            {
+                var minDob = DateTime.Today.AddYears(-pageBaseModel.max_age - 1);
+                var maxDob = DateTime.Today.AddYears(-pageBaseModel.min_age);
+
+                users = users.Where(u => u.date_of_birth >= minDob && u.date_of_birth <= maxDob);
+            }
+
+
+            return await PagedList<User>.PagedListAsync(users, pageBaseModel.PageIndex, pageBaseModel.PageSize);
         }
 
         public async Task<bool> SaveAll()
