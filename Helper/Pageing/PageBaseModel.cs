@@ -25,5 +25,8 @@ namespace DatingApp.API.Helper.Pageing
         public int min_age { get; set; } = 18;
         public int max_age { get; set; } = 99;
 
+        public bool likees { get; set; } = false;
+        public bool likers { get; set; } = false;
+
     }
 }

@@ -22,5 +22,7 @@ namespace DatingApp.API.Models
         public string country { get; set; }
         public ICollection<Photo> Photos { get; set; }
         public DateTime create_at { get; set; }
+        public ICollection<Like> likers { get; set; }
+        public ICollection<Like> likees { get; set; }
     }
 }

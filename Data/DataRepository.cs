@@ -1,4 +1,5 @@
-﻿using DatingApp.API.Helper.Pageing;
+﻿using CloudinaryDotNet.Actions;
+using DatingApp.API.Helper.Pageing;
 using DatingApp.API.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -24,6 +25,11 @@ namespace DatingApp.API.Data
         public void Delete<T>(T entity) where T : class
         {
             this._dataContext.Remove(entity);
+        }
+
+        public async Task<Like> GetLike(int user_id, int recipient_id)
+        {
+            return await _dataContext.Likes.FirstOrDefaultAsync(l => l.liker_id == user_id && l.likee_id == recipient_id);
         }
 
         public async Task<Photo> GetMainPhoto(int user_id)
@@ -53,7 +59,18 @@ namespace DatingApp.API.Data
             var users = _dataContext.Users.Include(p => p.Photos).AsQueryable();
             users = users.Where(u => u.Id != pageBaseModel.user_id && u.gender == pageBaseModel.gender);
 
-            if(pageBaseModel.min_age!=18 || pageBaseModel.max_age != 99)
+            if (pageBaseModel.likers || pageBaseModel.likees)
+            {
+                var userLikers = await GetUserLikes(pageBaseModel.user_id, pageBaseModel.likers);
+                users = users.Where(u => userLikers.Contains(u.Id));
+            }
+            //if (pageBaseModel.likees)
+            //{
+            //    var userLikees = await GetUserLikes(pageBaseModel.user_id, pageBaseModel.likers);
+            //    users = users.Where(u => userLikees.Contains(u.Id));
+            //}
+
+            if (pageBaseModel.min_age != 18 || pageBaseModel.max_age != 99)
             {
                 var minDob = DateTime.Today.AddYears(-pageBaseModel.max_age - 1);
                 var maxDob = DateTime.Today.AddYears(-pageBaseModel.min_age);
@@ -63,6 +80,16 @@ namespace DatingApp.API.Data
 
 
             return await PagedList<User>.PagedListAsync(users, pageBaseModel.PageIndex, pageBaseModel.PageSize);
+        }
+
+        private async Task<IEnumerable<int>> GetUserLikes(int user_id, bool likers)
+        {
+            var users =await _dataContext.Users.Include(x => x.likers).Include(x => x.likees).FirstOrDefaultAsync(u => u.Id == user_id);
+
+            if (likers)
+                return users.likers.Where(x => x.likee_id == user_id).Select(x => x.liker_id);
+            else
+                return users.likees.Where(x => x.liker_id == user_id).Select(x => x.likee_id);
         }
 
         public async Task<bool> SaveAll()
