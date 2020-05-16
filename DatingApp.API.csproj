@@ -5,6 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Helper\NewFolder1\**" />
+    <Compile Remove="Helper\NewFolder\**" />
+    <Content Remove="Helper\NewFolder1\**" />
+    <Content Remove="Helper\NewFolder\**" />
+    <EmbeddedResource Remove="Helper\NewFolder1\**" />
+    <EmbeddedResource Remove="Helper\NewFolder\**" />
+    <None Remove="Helper\NewFolder1\**" />
+    <None Remove="Helper\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="CloudinaryDotNet" Version="1.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.3" />
@@ -20,7 +31,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" />
   </ItemGroup>
 

@@ -24,5 +24,7 @@ namespace DatingApp.API.Models
         public DateTime create_at { get; set; }
         public ICollection<Like> likers { get; set; }
         public ICollection<Like> likees { get; set; }
+        public ICollection<Message> messages_send { get; set; }
+        public ICollection<Message> messages_received { get; set; }
     }
 }

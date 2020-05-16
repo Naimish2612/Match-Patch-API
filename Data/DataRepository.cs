@@ -1,9 +1,11 @@
 ﻿using CloudinaryDotNet.Actions;
+using DatingApp.API.Helper.MessageHelper;
 using DatingApp.API.Helper.Pageing;
 using DatingApp.API.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -84,7 +86,7 @@ namespace DatingApp.API.Data
 
         private async Task<IEnumerable<int>> GetUserLikes(int user_id, bool likers)
         {
-            var users =await _dataContext.Users.Include(x => x.likers).Include(x => x.likees).FirstOrDefaultAsync(u => u.Id == user_id);
+            var users = await _dataContext.Users.Include(x => x.likers).Include(x => x.likees).FirstOrDefaultAsync(u => u.Id == user_id);
 
             if (likers)
                 return users.likers.Where(x => x.likee_id == user_id).Select(x => x.liker_id);
@@ -95,6 +97,46 @@ namespace DatingApp.API.Data
         public async Task<bool> SaveAll()
         {
             return await _dataContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task<Message> GetMessage(int id)
+        {
+            return await _dataContext.Messages.FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        public async Task<PagedList<Message>> GetMessages(MessageParam messageParam)
+        {
+            var message = _dataContext.Messages.Include(u => u.sender).ThenInclude(p => p.Photos)
+                .Include(u => u.recipient).ThenInclude(p => p.Photos).AsQueryable();
+
+            switch (messageParam.message_container)
+            {
+                case "inbox":
+                    message = message.Where(m => m.recipientId == messageParam.user_id && m.recipient_deleted == false);
+                    break;
+                case "outbox":
+                    message = message.Where(m => m.senderId == messageParam.user_id && m.sender_deleted == false);
+                    break;
+                default:
+                    message = message.Where(m => m.recipientId == messageParam.user_id && m.recipient_deleted == false && m.is_read == false);
+                    break;
+            }
+
+            message = message.OrderByDescending(d => d.message_sent_date);
+
+            return await PagedList<Message>.PagedListAsync(message, messageParam.PageIndex, messageParam.PageSize);
+        }
+
+        public async Task<IEnumerable<Message>> GetMessages(int user_id, int recipient_id)
+        {
+            var messages = await _dataContext.Messages.Include(u => u.sender).ThenInclude(p => p.Photos)
+                .Include(u => u.recipient).ThenInclude(p => p.Photos)
+                .Where(x => x.recipientId == user_id && x.senderId == recipient_id && x.recipient_deleted == false ||
+                       x.recipientId == recipient_id && x.senderId == user_id && x.sender_deleted == false)
+                .OrderByDescending(x => x.message_sent_date)
+                .ToListAsync();
+
+            return messages;
         }
     }
 }
